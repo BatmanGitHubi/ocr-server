@@ -14,7 +14,7 @@ app.post("/ocr", express.raw({ type: "application/octet-stream", limit: "10mb" }
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
-          model: "gpt-4-vision-preview",
+          model: "gpt-4o",
           messages: [
             {
               role: "user",
