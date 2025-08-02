@@ -1,3 +1,4 @@
+// index.js
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
@@ -38,7 +39,7 @@ app.post("/ocr", async (req, res) => {
   }
 });
 
-// 🔹 OpenAI
+// 🔹 OpenAI (gpt-4o con prompt optimizado)
 async function ocrConOpenAI(base64Image) {
   const response = await axios.post(
     "https://api.openai.com/v1/chat/completions",
@@ -48,43 +49,53 @@ async function ocrConOpenAI(base64Image) {
         {
           role: "user",
           content: [
-            { type: "text", text: "Extrae todo el texto visible, incluyendo texto manuscrito y campos de tabla." },
+            {
+              type: "text",
+              text: "Extrae todo el texto visible de esta imagen, incluyendo texto manuscrito, campos de tabla, encuestas y respuestas organizadas. Intenta mantener el orden si hay filas múltiples."
+            },
             {
               type: "image_url",
               image_url: { url: `data:image/jpeg;base64,${base64Image}` }
-            },
+            }
           ]
         }
       ],
-      max_tokens: 1000,
+      max_tokens: 1200
     },
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+      }
     }
   );
+
   return response.data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 // 🔹 DeepSeek
 async function ocrConDeepSeek(base64Image) {
-  const prompt = `Extrae todo el texto visible de esta imagen.\n\nImagen (base64):\n\ndata:image/jpeg;base64,${base64Image}`;
+  const prompt = `Extrae todo el texto visible de esta imagen. Si hay encuestas, tablas o respuestas, preserva la estructura en filas.`;
   const response = await axios.post(
     "https://api.deepseek.com/v1/chat/completions",
     {
       model: "deepseek-chat",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "user",
+          content: `${prompt}\n\nImagen (base64):\n\ndata:image/jpeg;base64,${base64Image}`
+        }
+      ],
       max_tokens: 1000
     },
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-      },
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      }
     }
   );
+
   return response.data.choices?.[0]?.message?.content?.trim() || "";
 }
 
@@ -95,8 +106,9 @@ async function ocrConGoogleVision(imageBuffer) {
   return detections.length > 0 ? detections[0].description : "";
 }
 
-// 🔥 Start
+// 🔥 Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
+
 
