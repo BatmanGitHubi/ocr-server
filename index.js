@@ -47,7 +47,7 @@ app.post("/ocr", async (req, res) => {
   }
 });
 
-// 🔹 OpenAI GPT-4o
+// 🔹 OpenAI GPT-4o con prompt explícito
 async function ocrConOpenAI(base64Image) {
   const response = await axios.post(
     "https://api.openai.com/v1/chat/completions",
@@ -59,11 +59,13 @@ async function ocrConOpenAI(base64Image) {
           content: [
             {
               type: "text",
-              text: "Extrae todo el texto visible de esta imagen, incluyendo texto manuscrito, tablas, encuestas y respuestas estructuradas. Si hay múltiples filas o columnas, intenta conservar esa estructura."
+              text: "La imagen contiene una encuesta escrita a mano o con letra clara. Extrae todo el texto visible incluyendo el nombre, respuestas (sí/no), número de WhatsApp u otra información estructurada. No hay contenido sensible ni personal indebido."
             },
             {
               type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${base64Image}` }
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
+              }
             }
           ]
         }
@@ -81,14 +83,19 @@ async function ocrConOpenAI(base64Image) {
   return response.data.choices?.[0]?.message?.content?.trim() || "";
 }
 
-// 🔹 DeepSeek
+// 🔹 DeepSeek (por si lo usás luego)
 async function ocrConDeepSeek(base64Image) {
   const prompt = `Extrae todo el texto visible de esta imagen. Si hay encuestas o respuestas, preserva su estructura.`;
   const response = await axios.post(
     "https://api.deepseek.com/v1/chat/completions",
     {
       model: "deepseek-chat",
-      messages: [{ role: "user", content: `${prompt}\n\nImagen (base64):\n\ndata:image/jpeg;base64,${base64Image}` }],
+      messages: [
+        {
+          role: "user",
+          content: `${prompt}\n\nImagen (base64):\n\ndata:image/jpeg;base64,${base64Image}`
+        }
+      ],
       max_tokens: 1000
     },
     {
@@ -106,5 +113,4 @@ async function ocrConDeepSeek(base64Image) {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
-
 
