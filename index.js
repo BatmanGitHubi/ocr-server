@@ -49,4 +49,3 @@ app.post("/ocr", express.raw({ type: "application/octet-stream", limit: "10mb" }
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
-
