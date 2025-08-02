@@ -66,10 +66,12 @@ app.post("/ocr/openai", async (req, res) => {
   }
 });
 
-// 🔹 Endpoint OCR con DeepSeek
+// 🔹 Endpoint OCR con DeepSeek (CORREGIDO)
 app.post("/ocr/deepseek", async (req, res) => {
   try {
     const base64Image = req.body.toString("base64");
+
+    const prompt = `Extrae todo el texto visible de la siguiente imagen (impreso o manuscrito).\nImagen (base64):\n\ndata:image/jpeg;base64,${base64Image}`;
 
     const response = await axios.post(
       "https://api.deepseek.com/v1/chat/completions",
@@ -78,17 +80,10 @@ app.post("/ocr/deepseek", async (req, res) => {
         messages: [
           {
             role: "user",
-            content: [
-              { type: "text", text: "Extrae todo el texto visible de la imagen (impreso o manuscrito)." },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                },
-              },
-            ],
-          },
+            content: prompt
+          }
         ],
+        max_tokens: 1000
       },
       {
         headers: {
@@ -114,4 +109,3 @@ app.post("/ocr/deepseek", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
-
